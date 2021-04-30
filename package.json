@@ -1,0 +1,70 @@
+{
+  "name": "camunda-layering-plugin",
+  "version": "0.1.0",
+  "description": "View BPMN model in organized layers",
+  "main": "index.js",
+  "scripts": {
+    "all": "run-s lint bundle",
+    "bundle": "webpack",
+    "dev": "webpack -w",
+    "lint": "eslint .",
+    "prepublishOnly": "run-s bundle",
+    "test": "karma test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.sh4.red/luca.bonora/camunda-layering-plugin.git"
+  },
+  "keywords": [
+    "camunda",
+    "modeler",
+    "plugin",
+    "perspectives",
+    "layers",
+    "data",
+    "control",
+    "organizational",
+    "resource",
+    "flow"
+  ],
+  "author": "Luca Bonora <luca.bonora@sharedchains.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.13.1",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/preset-react": "^7.12.13",
+    "babel-loader": "^8.2.2",
+    "camunda-modeler-plugin-helpers": "^3.4.0-alpha.1",
+    "chai": "^4.3.0",
+    "copy-webpack-plugin": "^7.0.0",
+    "css-loader": "^5.0.2",
+    "eslint": "^7.20.0",
+    "eslint-plugin-bpmn-io": "^0.12.0",
+    "eslint-plugin-react": "^7.22.0",
+    "file-loader": "^6.2.0",
+    "karma": "^6.1.1",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-mocha": "^2.0.1",
+    "karma-sinon-chai": "^2.0.2",
+    "karma-webpack": "^5.0.0",
+    "mocha": "^8.3.0",
+    "mocha-test-container-support": "^0.2.0",
+    "npm-run-all": "^4.1.5",
+    "puppeteer": "^7.1.0",
+    "raw-loader": "^4.0.2",
+    "sinon": "^9.2.4",
+    "sinon-chai": "^3.5.0",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.24.0",
+    "webpack-cli": "^4.5.0",
+    "zip-webpack-plugin": "^4.0.1"
+  },
+  "dependencies": {
+    "bpmn-js": "^8.2.0",
+    "bpmn-js-properties-panel": "^0.40.0",
+    "classnames": "^2.2.6",
+    "inherits": "^2.0.4",
+    "lodash": "^4.17.21",
+    "min-dom": "^3.1.3"
+  }
+}
