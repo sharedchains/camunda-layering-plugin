@@ -1,5 +1,8 @@
-export default {
-  __init__: ['Nothing']
+import LayerManager from './LayerManager/LayerManager';
+import TogglePerspective from './TogglePerspective/TogglePerspective';
 
-  // Nothing: ['type', Nothing]
+export default {
+  __init__: ['layerManager', 'togglePerspective'],
+  layerManager : [ 'type', LayerManager],
+  togglePerspective : ['type', TogglePerspective]
 };

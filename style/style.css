@@ -1,0 +1,18 @@
+.toggle-perspective {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background-color: var(--palette-background-color, #FAFAFA);
+    border-radius: 2px;
+    padding: 6px;
+    font-size: 16px;
+    color: #212121;
+    border: solid 1px var(--palette-border-color, #CCC);
+    border-radius: 2px;
+}
+
+.disabled-element .djs-visual > :nth-child(1) {
+    fill-opacity: 0.4;
+    stroke-opacity: 0.4;
+    opacity: 0.4;
+}
