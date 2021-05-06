@@ -4,3 +4,9 @@ export const DataElements = [
   'bpmn:DataAssociation'
 ];
 
+export const CollaborationElements = [
+  'bpmn:Participant',
+  'bpmn:LaneSet',
+  'bpmn:Lane'
+];
+

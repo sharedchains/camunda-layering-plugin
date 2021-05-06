@@ -11,7 +11,7 @@
     border-radius: 2px;
 }
 
-.disabled-element .djs-visual > :nth-child(1) {
+.disabled-element .djs-visual > * {
     fill-opacity: 0.4;
     stroke-opacity: 0.4;
     opacity: 0.4;
