@@ -1,7 +1,8 @@
 import { domify, event as domEvent } from 'min-dom';
+import { UPDATE_RESOURCES } from '../util/EventHelper';
 
 export default function TogglePerspective(eventBus, canvas, layerManager) {
-  var self = this;
+  let self = this;
 
   this._eventBus = eventBus;
   this._canvas = canvas;
@@ -10,7 +11,9 @@ export default function TogglePerspective(eventBus, canvas, layerManager) {
 
   this._eventBus.on('import.done', () => self._init());
 
-  getResourceOptions.bind(this);
+  this._eventBus.on(UPDATE_RESOURCES, () => {
+    updateResources.call(self);
+  });
 }
 
 function getResourceOptions(layerManager, selectedValue) {

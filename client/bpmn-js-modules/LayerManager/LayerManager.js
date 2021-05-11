@@ -5,6 +5,7 @@ import { CollaborationElements, DataElements } from './LayerElements';
 import { filter, find, flatMap, map, remove } from 'lodash';
 
 import { add as collectionAdd } from 'diagram-js/lib/util/Collections';
+import { UPDATE_RESOURCES } from '../util/EventHelper';
 
 const LOW_PRIORITY = 100;
 
@@ -65,7 +66,7 @@ export default function LayerManager(eventBus) {
         let bo = getBusinessObject(element);
         collectionAdd(self.layers.pools, {
           id: element.id,
-          name: bo.get('name') || element.id,
+          name: bo.get('name'),
           process: bo.get('processRef') ? bo.get('processRef').id : undefined,
           elements: [],
           lanes: []
@@ -249,6 +250,11 @@ export default function LayerManager(eventBus) {
         let pool = find(self.layers.pools, { id: element.id });
         pool.name = updatedPropertiesObject.name;
       }
+
+      // Update perspective layout
+      if (isCollaboration) {
+        eventBus.fire(UPDATE_RESOURCES);
+      }
     }
   });
 
@@ -287,6 +293,6 @@ LayerManager.prototype.getResources = function() {
       let [laneId] = Object.entries(lane)[0];
       return laneId;
     });
-    return { id: pool.id, name: pool.name, lanes: lanes };
+    return { id: pool.id, name: pool.name || pool.id, lanes: lanes };
   });
 };
