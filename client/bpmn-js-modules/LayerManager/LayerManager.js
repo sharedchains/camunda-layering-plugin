@@ -2,11 +2,11 @@ import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
 
 import { CollaborationElements, DataElements } from './LayerElements';
 
-import { flatMap, filter, find, remove } from 'lodash';
+import { filter, find, flatMap, map, remove } from 'lodash';
 
-import {
-  add as collectionAdd
-} from 'diagram-js/lib/util/Collections';
+import { add as collectionAdd } from 'diagram-js/lib/util/Collections';
+
+const LOW_PRIORITY = 100;
 
 export default function LayerManager(eventBus) {
   this.layers = {
@@ -16,6 +16,7 @@ export default function LayerManager(eventBus) {
 
     /* hierarchy structure : {
         id: poolId,
+        name: name,
         process: processId,
         elements: [] element ids,
         lanes: [] lane ids => element ids
@@ -64,6 +65,7 @@ export default function LayerManager(eventBus) {
         let bo = getBusinessObject(element);
         collectionAdd(self.layers.pools, {
           id: element.id,
+          name: bo.get('name') || element.id,
           process: bo.get('processRef') ? bo.get('processRef').id : undefined,
           elements: [],
           lanes: []
@@ -164,19 +166,93 @@ export default function LayerManager(eventBus) {
     }
   }
 
-  eventBus.on(['shape.added', 'connection.added', 'commandStack.shape.create.postExecuted'], context => {
-    console.log('AddLayer ' + stringify(self.layers, 5, null, 2));
+  eventBus.on(['shape.added', 'connection.added', 'commandStack.shape.create.postExecuted'], LOW_PRIORITY, context => {
     let element = context.element || context.context.shape;
     addLayerElement(element);
   });
-  eventBus.on(['shape.removed', 'connection.removed'], context => {
-    console.log('removeLayer ' + stringify(self.layers, 5, null, 2));
+  eventBus.on(['shape.removed', 'connection.removed'], LOW_PRIORITY, context => {
     let element = context.element;
     removeLayerElement(element);
   });
 
-  eventBus.on('commandStack.lane.updateRefs.postExecute', context => {
-    console.log('LANE.UPDATEREFS ' + stringify(context, 5, null, 2));
+  eventBus.on(['commandStack.element.updateProperties.postExecuted'], LOW_PRIORITY, context => {
+
+    // If any element is updated (on id/name), I have to update my layers
+    let updatedPropertiesObject = context.context.properties;
+    let element = context.context.element;
+
+    let isCollaboration = self.layers.pools.length > 0;
+    let isNameUpdated = undefined;
+    if (Object.prototype.hasOwnProperty.call(updatedPropertiesObject, 'id') || (is(element, 'bpmn:Participant') && (isNameUpdated = Object.prototype.hasOwnProperty.call(updatedPropertiesObject, 'name')))) {
+
+      let isDataElement = DataElements.some(elementType => {
+        return is(element, elementType);
+      });
+      let isCollaborationElement = CollaborationElements.some(elementType => {
+        return is(element, elementType);
+      });
+      let oldProperties = context.context.oldProperties;
+
+      let oldId = oldProperties.id;
+      if (oldId) {
+        let newId = updatedPropertiesObject.id;
+        let indexElement;
+        if (isDataElement) {
+          indexElement = self.layers.data.indexOf(oldId);
+          self.layers.data.splice(indexElement, 1, newId);
+        } else {
+          indexElement = self.layers.control.indexOf(oldId);
+          if (indexElement !== -1) {
+            self.layers.control.splice(indexElement, 1, newId);
+          } else if (is(element, 'bpmn:Participant')) {
+            let pool = find(self.layers.pools, { id: oldId });
+            pool.id = newId;
+          } else if (is(element, 'bpmn:Lane')) {
+            let process = getProcess(element);
+            let pool = find(self.layers.pools, { process: process.id });
+            let poolLane = find(pool.lanes, lane => {
+              let [laneId] = Object.entries(lane)[0];
+              return laneId === oldId;
+            });
+            Object.defineProperty(poolLane, newId, Object.getOwnPropertyDescriptor(poolLane, oldId));
+            delete poolLane[oldId];
+          }
+        }
+
+        if (isCollaboration && !isCollaborationElement) {
+
+          let rootElement = getProcess(element);
+          if (rootElement) {
+
+            // Update a single element from the pool hierarchy and, if present, from lanes
+            let pool = find(self.layers.pools, { process: rootElement.id });
+            indexElement = pool.elements.indexOf(oldId);
+            pool.elements.splice(indexElement, 1, newId);
+
+            if (pool.lanes.length > 0) {
+              let occurredLane = find(pool.lanes, lane => {
+                let [, elementsArray] = Object.entries(lane)[0];
+                return elementsArray.indexOf(element.id) !== -1;
+              });
+
+              if (occurredLane) {
+                let [, elementsArray] = Object.entries(occurredLane)[0];
+                indexElement = elementsArray.indexOf(oldId);
+                elementsArray.splice(indexElement, 1, newId);
+              }
+            }
+          }
+        }
+      }
+
+      if (is(element, 'bpmn:Participant') && isNameUpdated) {
+        let pool = find(self.layers.pools, { id: element.id });
+        pool.name = updatedPropertiesObject.name;
+      }
+    }
+  });
+
+  eventBus.on('commandStack.lane.updateRefs.postExecute', LOW_PRIORITY, context => {
     let ctx = context.context.updates;
     ctx.forEach(update => {
       let element = update.flowNode;
@@ -184,27 +260,8 @@ export default function LayerManager(eventBus) {
         updateLayerPools(element, update.add, update.remove);
       }
     });
-    console.log('LANE.UPDATEREFS ' + stringify(self.layers, 5, null, 2));
   });
-
 }
-
-const stringify = function(val, depth, replacer, space) {
-  depth = isNaN(+depth) ? 1 : depth;
-
-  function _build(key, val, depth, o, a) { // (JSON.stringify() has it's own rules, which we respect here by using it for property iteration)
-    return !val || typeof val != 'object' ? val : (a = Array.isArray(val), JSON.stringify(val, function(k, v) {
-      if (a || depth > 0) {
-        if (replacer) v = replacer(k, v);
-        if (!k) return (a = Array.isArray(v), val = v);
-        !o && (o = a ? [] : {});
-        o[k] = _build(k, v, a ? depth : depth - 1);
-      }
-    }), o || (a ? [] : {}));
-  }
-
-  return JSON.stringify(_build('', val, depth), null, space);
-};
 
 LayerManager.$inject = ['eventBus'];
 
@@ -222,4 +279,14 @@ LayerManager.prototype.getElements = function(type) {
   }
 
   return this.layers[typeToHide];
+};
+
+LayerManager.prototype.getResources = function() {
+  return map(this.layers.pools, pool => {
+    let lanes = map(pool.lanes, lane => {
+      let [laneId] = Object.entries(lane)[0];
+      return laneId;
+    });
+    return { id: pool.id, name: pool.name, lanes: lanes };
+  });
 };

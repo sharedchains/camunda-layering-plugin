@@ -1,14 +1,18 @@
-.toggle-perspective {
+.perspective-palette {
     position: absolute;
     bottom: 20px;
     left: 20px;
     background-color: var(--palette-background-color, #FAFAFA);
-    border-radius: 2px;
     padding: 6px;
     font-size: 16px;
     color: #212121;
     border: solid 1px var(--palette-border-color, #CCC);
     border-radius: 2px;
+    display: flex;
+}
+
+.perspective-palette > * {
+    padding: 3px;
 }
 
 .disabled-element .djs-visual > * {
