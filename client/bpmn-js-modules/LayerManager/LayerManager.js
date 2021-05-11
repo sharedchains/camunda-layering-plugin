@@ -287,12 +287,24 @@ LayerManager.prototype.getElements = function(type) {
   return this.layers[typeToHide];
 };
 
-LayerManager.prototype.getResources = function() {
+LayerManager.prototype.getResources = function(getElements) {
   return map(this.layers.pools, pool => {
-    let lanes = map(pool.lanes, lane => {
-      let [laneId] = Object.entries(lane)[0];
-      return laneId;
-    });
-    return { id: pool.id, name: pool.name || pool.id, lanes: lanes };
+    let lanes = pool.lanes;
+    if (!getElements) {
+      lanes = map(pool.lanes, lane => {
+        let [laneId] = Object.entries(lane)[0];
+        return laneId;
+      });
+    }
+
+    let returnObject = {
+      id: pool.id,
+      name: pool.name || pool.id,
+      lanes: lanes
+    };
+    if (getElements) {
+      returnObject.elements = pool.elements;
+    }
+    return returnObject;
   });
 };
