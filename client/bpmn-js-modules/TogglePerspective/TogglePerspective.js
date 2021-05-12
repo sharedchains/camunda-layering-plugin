@@ -1,6 +1,8 @@
 import { domify, event as domEvent } from 'min-dom';
 import { UPDATE_RESOURCES } from '../util/EventHelper';
 
+const ALL_POOLS = '0_all_pools';
+
 export default function TogglePerspective(eventBus, canvas, elementRegistry, layerManager) {
   let self = this;
 
@@ -17,12 +19,11 @@ export default function TogglePerspective(eventBus, canvas, elementRegistry, lay
   });
 }
 
-function getResourceOptions(layerManager, selectedValue) {
-  let options = [];
+function getResourceOptions(layerManager) {
+  let options = [`<option value="${ALL_POOLS}" data-isLane="false">All</option>`];
   let resources = layerManager.getResources();
   resources.forEach(resource => {
 
-    // TODO: selectedValue
     options.push(`<option value="${resource.id}" data-isLane="false">${resource.name}</option>`);
     if (resource.lanes.length > 0) {
       resource.lanes.forEach(lane => {
@@ -69,7 +70,7 @@ TogglePerspective.prototype._init = function() {
   domEvent.bind(this.resource, 'change', (event) => {
     let isLane = event.target.options[event.target.options.selectedIndex].getAttribute('data-isLane');
     let parent = event.target.options[event.target.options.selectedIndex].getAttribute('data-parent');
-    self.changeResource.call(self, event.target.value, isLane, parent);
+    self.changeResource.call(self, event.target.value, (isLane === 'true'), parent);
   });
 
   this.organizationalContainer.appendChild(this.resource);
@@ -118,32 +119,44 @@ TogglePerspective.prototype.changeResource = function(selectedElementId, isLane,
     });
   }
 
-  resources.forEach(resource => {
+  if (selectedElementId !== ALL_POOLS) {
 
-    // for each pool => disable
-    if (resource.id !== selectedElementId) {
-      if (!isLane || resource.id !== parentId) {
+    resources.forEach(resource => {
 
-        // Selected a pool
-        this.oldElementsMarked.push(...resource.elements, resource.id);
-      } else {
-        resource.lanes.forEach(lane => {
-          let [laneId, elementsArray] = Object.entries(lane)[0];
-          if (laneId !== selectedElementId) {
-            this.oldElementsMarked.push(...elementsArray, laneId);
-          } else {
-            fitCanvasToElement(selectedElementId);
+      // for each pool => disable
+      if (resource.id !== selectedElementId) {
+        if (!isLane || resource.id !== parentId) {
+
+          // Selected a pool or it's a lane of another pool
+          this.oldElementsMarked.push(...resource.elements, resource.id);
+          if (!isLane) {
+            resource.lanes.forEach(lane => {
+              let [laneId, elementsArray] = Object.entries(lane)[0];
+              this.oldElementsMarked.push(...elementsArray, laneId);
+            });
           }
-        });
+        } else {
+          resource.lanes.forEach(lane => {
+            let [laneId, elementsArray] = Object.entries(lane)[0];
+            if (laneId !== selectedElementId) {
+              this.oldElementsMarked.push(...elementsArray, laneId);
+            } else {
+              fitCanvasToElement(selectedElementId);
+            }
+          });
+        }
+      } else {
+        fitCanvasToElement(selectedElementId);
       }
-    } else {
-      fitCanvasToElement(selectedElementId);
-    }
-  });
+    });
 
-  this.oldElementsMarked.forEach(elementId => {
-    self._canvas.addMarker(elementId, 'disabled-element');
-  });
+    this.oldElementsMarked.forEach(elementId => {
+      self._canvas.addMarker(elementId, 'disabled-element');
+    });
+
+  } else {
+    self._canvas.zoom('fit-viewport', 'auto');
+  }
 
   // TODO: Disable modeling on elements
 };
