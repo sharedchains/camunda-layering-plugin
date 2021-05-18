@@ -152,8 +152,10 @@ function updateView(perspectiveType, selectedElementId, isLane, parentId) {
     let newArray;
     if (perspectiveType !== 'global' && selectedElementId !== ALL_POOLS) {
       newArray = this.oldElementsMarked.concat(elements);
-    } else {
+    } else if (resources.length > 0) {
       newArray = intersection(this.oldElementsMarked, elements);
+    } else {
+      newArray = elements;
     }
     newArray.forEach(elementId => {
       this._canvas.addMarker(elementId, 'disabled-element');
