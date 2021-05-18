@@ -60,6 +60,9 @@ npm run all
 * [Plug-ins documentation](https://github.com/camunda/camunda-modeler/tree/master/docs/plugins)
 
 
+## TODO
+* Organizational perspective with black box pools
+
 ## Licence
 
 MIT
