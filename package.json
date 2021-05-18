@@ -9,7 +9,7 @@
     "dev": "webpack -w",
     "lint": "eslint .",
     "prepublishOnly": "run-s bundle",
-    "test": "karma test"
+    "test": "karma start"
   },
   "repository": {
     "type": "git",
