@@ -62,6 +62,8 @@ export default function LayerManager(eventBus) {
     if (isDataElement) {
       collectionAdd(self.layers.data, element.id);
     } else if (isCollaborationElement) {
+
+      // if is a lane, do nothing here
       if (isParticipant) {
         let bo = getBusinessObject(element);
         collectionAdd(self.layers.pools, {
@@ -72,8 +74,6 @@ export default function LayerManager(eventBus) {
           lanes: []
         });
       }
-
-      // if is a lane, do nothing here
     } else {
       collectionAdd(self.layers.control, element.id);
     }
@@ -184,7 +184,8 @@ export default function LayerManager(eventBus) {
 
     let isCollaboration = self.layers.pools.length > 0;
     let isNameUpdated = undefined;
-    if (Object.prototype.hasOwnProperty.call(updatedPropertiesObject, 'id') || (is(element, 'bpmn:Participant') && (isNameUpdated = Object.prototype.hasOwnProperty.call(updatedPropertiesObject, 'name')))) {
+    if (Object.prototype.hasOwnProperty.call(updatedPropertiesObject, 'id') ||
+      (is(element, 'bpmn:Participant') && (isNameUpdated = Object.prototype.hasOwnProperty.call(updatedPropertiesObject, 'name')))) {
 
       let isDataElement = DataElements.some(elementType => {
         return is(element, elementType);
@@ -272,19 +273,19 @@ export default function LayerManager(eventBus) {
 LayerManager.$inject = ['eventBus'];
 
 LayerManager.prototype.getElements = function(type) {
-  let typeToHide;
+  let returnedElements;
   switch (type) {
   case 'control':
-    typeToHide = 'data';
+    returnedElements = this.layers['data'];
     break;
   case 'data' :
-    typeToHide = 'control';
+    returnedElements = this.layers['control'];
     break;
   default:
-    typeToHide = 'global';
+    returnedElements = this.layers['data'].concat(this.layers['control']);
   }
 
-  return this.layers[typeToHide];
+  return returnedElements;
 };
 
 LayerManager.prototype.getResources = function(getElements) {
