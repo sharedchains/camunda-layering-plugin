@@ -1,7 +1,7 @@
 .perspective-palette {
     position: absolute;
     bottom: 20px;
-    left: 20px;
+    right: 20px;
     background-color: var(--palette-background-color, #FAFAFA);
     padding: 6px;
     font-size: 16px;

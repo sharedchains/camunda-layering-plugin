@@ -14,7 +14,9 @@ export default function TogglePerspective(eventBus, canvas, elementRegistry, lay
   this._layerManager = layerManager;
   this.oldElementsMarked = [];
   this.perspectiveType = 'global';
+  this.changedPerspectiveType = false;
   this.resourceValue = ALL_POOLS;
+  this.changedResourceValue = false;
   this.isResourceLane = false;
   this.parentLaneId = undefined;
 
@@ -48,10 +50,10 @@ function updateResources() {
 }
 
 TogglePerspective.prototype._init = function() {
+  let self = this;
+  self.globalContainer = domify('<div class="perspective-palette"></div>');
 
-  this.globalContainer = domify('<div class="perspective-palette"></div>');
-
-  this.perspectiveContainer = domify(`
+  self.perspectiveContainer = domify(`
     <div class="toggle-perspective">
         <label for="perspective">Perspective:&nbsp;</label>
     </div>
@@ -64,22 +66,23 @@ TogglePerspective.prototype._init = function() {
 
   domEvent.bind(perspective, 'change', (event) => {
 
+    self.changedPerspectiveType = false;
     self.perspectiveType = event.target.value;
     updateView.call(self, event.target.value, self.resourceValue, self.isResourceLane, self.parentLaneId);
   });
 
-  this.organizationalContainer = domify(`
+  self.organizationalContainer = domify(`
   <div class="toggle-resource">
     <label for="resource">Resource: </label>
   </div>`);
-  this.resource = domify('<select name="resource"></select>');
+  self.resource = domify('<select name="resource"></select>');
   updateResources.call(this);
 
-  let self = this;
-  domEvent.bind(this.resource, 'change', (event) => {
+  domEvent.bind(self.resource, 'change', (event) => {
     let isLane = event.target.options[event.target.options.selectedIndex].getAttribute('data-isLane');
     let parent = event.target.options[event.target.options.selectedIndex].getAttribute('data-parent');
 
+    self.changedResourceValue = true;
     self.resourceValue = event.target.value;
     self.isResourceLane = (isLane === 'true');
     self.parentLaneId = parent;
@@ -87,11 +90,11 @@ TogglePerspective.prototype._init = function() {
     updateView.call(self, self.perspectiveType, event.target.value, (isLane === 'true'), parent);
   });
 
-  this.organizationalContainer.appendChild(this.resource);
-  this.perspectiveContainer.appendChild(perspective);
-  this.globalContainer.appendChild(this.perspectiveContainer);
-  this.globalContainer.appendChild(this.organizationalContainer);
-  this._canvas.getContainer().appendChild(this.globalContainer);
+  self.organizationalContainer.appendChild(self.resource);
+  self.perspectiveContainer.appendChild(perspective);
+  self.globalContainer.appendChild(self.perspectiveContainer);
+  self.globalContainer.appendChild(self.organizationalContainer);
+  self._canvas.getContainer().appendChild(self.globalContainer);
 };
 
 function fitCanvasToElement(selectedId) {
@@ -138,12 +141,12 @@ function updateView(perspectiveType, selectedElementId, isLane, parentId) {
           let [laneId, elementsArray] = Object.entries(lane)[0];
           if (laneId !== selectedElementId) {
             this.oldElementsMarked.push(...elementsArray, laneId);
-          } else {
+          } else if (this.changedResourceValue) {
             fitCanvasToElement.call(this, selectedElementId);
           }
         });
       }
-    } else {
+    } else if (this.changedResourceValue) {
       fitCanvasToElement.call(this, selectedElementId);
     }
   });
@@ -162,9 +165,11 @@ function updateView(perspectiveType, selectedElementId, isLane, parentId) {
     });
     this.oldElementsMarked = newArray;
   }
-  if (selectedElementId === ALL_POOLS) {
+  if (this.changedResourceValue) {
     this._canvas.zoom('fit-viewport', 'auto');
   }
+  this.changedPerspectiveType = false;
+  this.changedResourceValue = false;
 }
 
 TogglePerspective.$inject = ['eventBus', 'canvas', 'elementRegistry', 'layerManager'];
