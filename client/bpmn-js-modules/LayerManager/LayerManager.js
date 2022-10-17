@@ -102,11 +102,11 @@ export default function LayerManager(eventBus) {
       let lane = find(
         flatMap(self.layers.pools, 'lanes'),
         poolLane => {
-          let [laneId] = Object.entries(poolLane)[0];
+          let [ laneId ] = Object.entries(poolLane)[0];
           return oldLane.id === laneId;
         });
       if (lane) {
-        let [laneId, elementsArray] = Object.entries(lane)[0];
+        let [ laneId, elementsArray ] = Object.entries(lane)[0];
         lane[laneId] = filter(elementsArray, id => id !== element.id);
       }
     });
@@ -114,11 +114,11 @@ export default function LayerManager(eventBus) {
       let lane = find(
         flatMap(self.layers.pools, 'lanes'),
         poolLane => {
-          let [laneId] = Object.entries(poolLane)[0];
+          let [ laneId ] = Object.entries(poolLane)[0];
           return newLane.id === laneId;
         });
       if (lane) {
-        let [laneId] = Object.entries(lane)[0];
+        let [ laneId ] = Object.entries(lane)[0];
         collectionAdd(lane[laneId], element.id);
       }
 
@@ -141,7 +141,7 @@ export default function LayerManager(eventBus) {
         let process = getProcess(element);
         let pool = find(self.layers.pools, { process: process.id });
         remove(pool.lanes, lane => {
-          let [laneId] = Object.entries(lane)[0];
+          let [ laneId ] = Object.entries(lane)[0];
           return laneId === element.id;
         });
       } else {
@@ -150,16 +150,18 @@ export default function LayerManager(eventBus) {
 
           // Remove a single element from the pool hierarchy and, if present, from lanes
           let pool = find(self.layers.pools, { process: rootElement.id });
-          remove(pool.elements, id => id === element.id);
-          if (pool.lanes.length > 0) {
-            let occurredLane = find(pool.lanes, lane => {
-              let [, elementsArray] = Object.entries(lane)[0];
-              return elementsArray.indexOf(element.id) !== -1;
-            });
+          if (pool) {
+            remove(pool.elements, id => id === element.id);
+            if (pool.lanes.length > 0) {
+              let occurredLane = find(pool.lanes, lane => {
+                let [ , elementsArray ] = Object.entries(lane)[0];
+                return elementsArray.indexOf(element.id) !== -1;
+              });
 
-            if (occurredLane) {
-              let [laneId, elementsArray] = Object.entries(occurredLane)[0];
-              occurredLane[laneId] = filter(elementsArray, id => id !== element.id);
+              if (occurredLane) {
+                let [ laneId, elementsArray ] = Object.entries(occurredLane)[0];
+                occurredLane[laneId] = filter(elementsArray, id => id !== element.id);
+              }
             }
           }
         }
@@ -167,16 +169,16 @@ export default function LayerManager(eventBus) {
     }
   }
 
-  eventBus.on(['shape.added', 'connection.added', 'commandStack.shape.create.postExecuted'], LOW_PRIORITY, context => {
+  eventBus.on([ 'shape.added', 'connection.added', 'commandStack.shape.create.postExecuted' ], LOW_PRIORITY, context => {
     let element = context.element || context.context.shape;
     addLayerElement(element);
   });
-  eventBus.on(['shape.removed', 'connection.removed'], LOW_PRIORITY, context => {
+  eventBus.on([ 'shape.removed', 'connection.removed' ], LOW_PRIORITY, context => {
     let element = context.element;
     removeLayerElement(element);
   });
 
-  eventBus.on(['commandStack.element.updateProperties.postExecuted'], LOW_PRIORITY, context => {
+  eventBus.on([ 'commandStack.element.updateProperties.postExecuted' ], LOW_PRIORITY, context => {
 
     // If any element is updated (on id/name), I have to update my layers
     let updatedPropertiesObject = context.context.properties;
@@ -213,7 +215,7 @@ export default function LayerManager(eventBus) {
             let process = getProcess(element);
             let pool = find(self.layers.pools, { process: process.id });
             let poolLane = find(pool.lanes, lane => {
-              let [laneId] = Object.entries(lane)[0];
+              let [ laneId ] = Object.entries(lane)[0];
               return laneId === oldId;
             });
             Object.defineProperty(poolLane, newId, Object.getOwnPropertyDescriptor(poolLane, oldId));
@@ -233,12 +235,12 @@ export default function LayerManager(eventBus) {
 
             if (pool.lanes.length > 0) {
               let occurredLane = find(pool.lanes, lane => {
-                let [, elementsArray] = Object.entries(lane)[0];
+                let [ , elementsArray ] = Object.entries(lane)[0];
                 return elementsArray.indexOf(element.id) !== -1;
               });
 
               if (occurredLane) {
-                let [, elementsArray] = Object.entries(occurredLane)[0];
+                let [ , elementsArray ] = Object.entries(occurredLane)[0];
                 indexElement = elementsArray.indexOf(oldId);
                 elementsArray.splice(indexElement, 1, newId);
               }
@@ -270,7 +272,7 @@ export default function LayerManager(eventBus) {
   });
 }
 
-LayerManager.$inject = ['eventBus'];
+LayerManager.$inject = [ 'eventBus' ];
 
 LayerManager.prototype.getElements = function(type) {
   let returnedElements;
@@ -293,7 +295,7 @@ LayerManager.prototype.getResources = function(getElements) {
     let lanes = pool.lanes;
     if (!getElements) {
       lanes = map(pool.lanes, lane => {
-        let [laneId] = Object.entries(lane)[0];
+        let [ laneId ] = Object.entries(lane)[0];
         return laneId;
       });
     }
