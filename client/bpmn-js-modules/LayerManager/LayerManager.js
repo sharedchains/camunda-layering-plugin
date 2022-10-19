@@ -4,10 +4,28 @@ import { CollaborationElements, DataElements } from './LayerElements';
 
 import { filter, find, flatMap, map, remove } from 'lodash';
 
-import { add as collectionAdd } from 'diagram-js/lib/util/Collections';
 import { UPDATE_RESOURCES } from '../util/EventHelper';
 
 const LOW_PRIORITY = 100;
+
+function getHash(obj) {
+
+  // Create a string representation of the object
+  return Object.keys(obj)
+    .sort() // Keys don't have to be sorted, we need to sort them
+    .map(function(k) {
+      return k + '_' + obj[k]; // concat each key with its value
+    })
+    .join('_'); // separate key-value-pairs by a _
+}
+
+function collectionAdd(collection, element) {
+
+  const mapCollection = new Map(collection.map(v => [ getHash(v), v ]));
+  if (!mapCollection.has(getHash(element))) {
+    collection.push(element);
+  }
+}
 
 export default function LayerManager(eventBus) {
   this.layers = {
@@ -73,6 +91,7 @@ export default function LayerManager(eventBus) {
           elements: [],
           lanes: []
         });
+        eventBus.fire(UPDATE_RESOURCES);
       }
     } else {
       collectionAdd(self.layers.control, element.id);
@@ -166,6 +185,7 @@ export default function LayerManager(eventBus) {
           }
         }
       }
+      eventBus.fire(UPDATE_RESOURCES);
     }
   }
 

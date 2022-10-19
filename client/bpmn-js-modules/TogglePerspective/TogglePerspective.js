@@ -8,6 +8,7 @@ const ALL_POOLS = '0_all_pools';
 export default function TogglePerspective(eventBus, canvas, elementRegistry, layerManager) {
   let self = this;
 
+  this._initialized = false;
   this._eventBus = eventBus;
   this._canvas = canvas;
   this._elementRegistry = elementRegistry;
@@ -42,11 +43,13 @@ function getResourceOptions(layerManager) {
 }
 
 function updateResources() {
-  this.resource.innerHTML = '';
-  let options = getResourceOptions(this._layerManager);
-  options.forEach(option => {
-    this.resource.appendChild(domify(option));
-  });
+  if (this._initialized) {
+    this.resource.innerHTML = '';
+    let options = getResourceOptions(this._layerManager);
+    options.forEach(option => {
+      this.resource.appendChild(domify(option));
+    });
+  }
 }
 
 TogglePerspective.prototype._init = function() {
@@ -76,6 +79,7 @@ TogglePerspective.prototype._init = function() {
     <label for="resource">Resource: </label>
   </div>`);
   self.resource = domify('<select name="resource"></select>');
+  self._initialized = true;
   updateResources.call(this);
 
   domEvent.bind(self.resource, 'change', (event) => {
